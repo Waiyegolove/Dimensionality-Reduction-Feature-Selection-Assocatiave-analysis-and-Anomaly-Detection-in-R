@@ -1,0 +1,88 @@
+---
+title: "Feature Selection"
+author: "Waiyego Mburu"
+date: "15/07/2021"
+output: html_document
+---
+
+### FEATURE SELECTION USING R
+#### Filter Method
+```{r}
+library(caret)
+library(corrplot)
+```
+
+```{r}
+df<- read.csv("http://bit.ly/CarreFourDataset")
+```
+
+```{r}
+df1 <- df[,c(6,7,8,12,13,14,15,16)]
+head(df1)
+```
+
+```{r}
+# Removing the gross margin percentage column
+df1 = subset(df1, select = -c(gross.margin.percentage, Total) )
+```
+
+```{r}
+head(df1, 5)
+```
+
+```{r}
+correlationMatrix <- cor(df1)
+correlationMatrix
+```
+
+```{r}
+highlyCorrelated <- findCorrelation(correlationMatrix, cutoff=0.75)
+highlyCorrelated
+```
+
+```{r}
+# Highly correlated attributes
+highlyCorrelated
+
+names(df1[,highlyCorrelated])
+```
+
+```{r}
+# Removing Redundant Features 
+# ---
+# 
+df1_ <- df1[-highlyCorrelated]
+
+# Performing our graphical comparison
+# ---
+# 
+par(mfrow = c(1, 2))
+corrplot(correlationMatrix, order = "hclust")
+corrplot(cor(df1_), order = "hclust")
+```
+
+The filter method works by removing the redundant variables from the data as they measure the relevance of features by their correlation with dependent variable. After implementing filter method of feature selection, we found the features that had the most correlation were tax and cogs and as such should be excluded from the features to be used.
+
+#### Wrapper Method
+```{r}
+# Sequential forward greedy search (default)
+library(clustvarsel)
+library(mclust)
+```
+
+```{R}
+out = clustvarsel(df1)
+out
+```
+
+```{r}
+Subset1 = df1[,out$subset]
+mod = Mclust(Subset1, G = 1:5)
+summary(mod)
+```
+
+In wrapper methods, the feature selection process is based on a specific machine learning algorithm that we are trying to fit on a given dataset.
+A greedy search approach is used in the evaluation of all the possible combinations of features against the evaluation criterion. The evaluation criterion is simply the performance measure which depends on the type of problem.
+
+After employing wrapper method of feature selection, we get quantity, cogs and unit price as the most relevant features to use in building our machine learning model. We'll need to understand the relevance of cogs since wrapper method tells us it is a relevant feature while filter method tells us it is a redundant feature. 
+

@@ -1,0 +1,65 @@
+---
+title: "Anomaly Detection"
+author: "Waiyego Mburu"
+date: "15/07/2021"
+output: html_document
+---
+```{r}
+library(tidyverse)
+library(anomalize)
+library(tibbletime)
+library(dplyr)
+```
+
+```{r}
+df3<- read.csv("http://bit.ly/CarreFourSalesDataset")
+```
+
+```{r}
+head(df3)
+```
+
+```{r}
+str(df3)
+```
+
+```{r}
+colSums(is.na(df3))
+```
+
+```{r}
+duplicates <- df3[duplicated(df3),]
+duplicates
+```
+
+```{r}
+# Grouping by server and converting to tibbletime
+
+sales <- df3 %>% group_by(Date) %>%
+   mutate(Date = as.Date (Date, format="%m/%d/%Y")) %>% as_tbl_time(index = Date)
+
+head(sales)
+```
+
+```{r}
+# performing anomaly detection on the sales 
+sales_anomalized <- sales %>% summarise(Orders = sum(Sales)) %>%
+    time_decompose(Orders) %>%
+    anomalize(remainder, alpha = 0.25, max_anoms = 0.2) %>%
+    time_recompose() %>%
+    plot_anomalies(time_recomposed = TRUE) +
+    ggtitle("alpha = 0.05, max_anoms = 0.2")
+    
+sales_anomalized
+```
+
+I couldn't find any anomalies with the normal Alpha of 0.05, but when I increased it to 0.25, I found some probable anomalies.
+
+## **CONCLUSION**
+
+* The months of February and March saw the most anomalies.
+* The month of January had the fewest anomalies.
+
+## **RECOMMENDATIONS**
+* The management should check into the sales that occur in February and March because there is a risk of either losses or unexplained earnings pilfering. 
+* A system that detects anomalies as soon as they occur should also be in place so that they can be explored as quickly as feasible.

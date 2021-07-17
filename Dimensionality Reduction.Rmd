@@ -1,0 +1,99 @@
+---
+title: "Dimensionality Reduction"
+author: "Waiyego Mburu"
+date: "15/07/2021"
+output: html_document
+---
+
+```{r}
+df<- read.csv("http://bit.ly/CarreFourDataset")
+```
+
+```{r}
+head(df)
+```
+
+```{r}
+str(df)
+```
+
+```{r}
+colSums(is.na(df))
+```
+
+```{r}
+duplicates <- df[duplicated(df),]
+duplicates
+```
+```{r}
+# check for outliers/anomalies
+
+# Finding all columns that are numerical/not strings & subsetting to new dataframe
+df_num <- df[, !sapply(df, is.character)]
+
+par(mfrow = c(1,1), mar = c(5,4,2,2))
+boxplot(df_num[, c(1,5)], main='BoxPlots')
+boxplot(df_num[, c(3,6)])
+boxplot(df_num[, c(2,7)])
+boxplot(df_num[ ,c(4,8)])
+
+
+```
+
+We do not deal with the outliers because there are other factors that can explain them for example the seasons the purchases were made.
+
+## IMPLEMENTING THE SOLUTION
+### PCA USING R
+```{r}
+# creating a dataset for PCA
+df1 <- df[,c(6,7,8,12,13,14,15,16)]
+head(df1)
+```
+
+```{r}
+# Removing the gross margin percentage column
+df1 = subset(df1, select = -c(gross.margin.percentage, Total) )
+```
+
+```{r}
+head(df1)
+```
+
+```{r}
+pca_obj <- prcomp(df1, scale=TRUE)
+summary(pca_obj)
+```
+
+After carrying out PCA, it was thereby duly noted that the first three principal components accounted for 98.71% of the total variance while the rest of the components explained very little of the variance thereby not considered.
+
+```{r}
+library(devtools)
+library(ggbiplot)
+```
+
+```{r}
+ggbiplot(pca_obj)
+```
+
+```{r}
+ggbiplot(pca_obj, groups = as.factor(df$Branch), ellipse = TRUE, circle = TRUE)
+```
+
+```{r}
+ggbiplot(pca_obj, groups = as.factor(df$Customer.type), ellipse = TRUE, circle = TRUE)
+```
+
+```{r}
+ggbiplot(pca_obj, groups = as.factor(df$Product.line), ellipse = TRUE, circle = TRUE)
+```
+
+```{r}
+ggbiplot(pca_obj, groups = as.factor(df$Payment), ellipse = TRUE, circle = TRUE)
+```
+
+## **CONCLUSION**
+* As seen the first three principle components are the most significant since they explain **98%** of our explained variance.
+* PCA wouldn't be the ideal method to use since there exists an overlap in our customers.
+
+## **RECOMMENDATIONS**
+* We should find another method of dimensionality reduction that takes into consideration the overlap. For example t-SNE.
